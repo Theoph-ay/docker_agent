@@ -1,0 +1,36 @@
+services:
+  #docker compose expects services
+  backend:
+    #custom key name
+    #image: python:3.13.4-slim-bullseye
+    build:
+      context: ./backend #build context
+      dockerfile: Dockerfile #if in a seperate dolder you can reference the path e.g dockerfile: ./dockerfile/examples
+    ports:
+      - "8080:8000"
+    command: uvicorn main:app  --host 0.0.0.0 --port 8000 # --watch or --reload for this to automatically reload in fastapi or django
+    volumes:
+      - ./backend/src:/app
+    develop:
+      watch:
+        - action: rebuild
+          path: backend/requirements.txt
+        - action: rebuild
+          path: backend/Dockerfile
+        - action: restart #sync ignores stuffs, volumes don't; use restart instead of --reload in port
+          path: backend/src
+          #target: /app
+
+  static_html:
+    #custom key name
+    #image: python:3.13.4-slim-bullseye
+    build:
+      context: ./static_html #build context
+      dockerfile: static.Dockerfile #if in a seperate dolder you can reference the path e.g dockerfile: ./dockerfile/examples
+    ports:
+      - "8000:8000"
+      - "3000:8000"
+    command: [ "python", "-m", "http.server", "8000" ] # --watch or --reload for this to automatically reload in fastapi or django
+    volumes:
+      - ./static_html/src:/app
+  # you can set up a second app here,but make sure you use a different port
