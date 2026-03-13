@@ -11,6 +11,7 @@ COPY requirements.txt /tmp/requiremments.txt
 
 #RUN within_container_while_building
 RUN pip install -r /tmp/requiremments.txt
+
 COPY ./src .
 
 CMD ["python","-m","http.server","8000"]
