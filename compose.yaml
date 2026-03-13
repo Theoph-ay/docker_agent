@@ -9,6 +9,11 @@ services:
     ports:
       - "8080:8000"
     command: uvicorn main:app  --host 0.0.0.0 --port 8000 # --watch or --reload for this to automatically reload in fastapi or django
+    environment:
+      - PORT=8000
+      - MY_PROJECT=Hello World Again
+    env_file:
+      - .env.sample
     volumes:
       - ./backend/src:/app
     develop:
