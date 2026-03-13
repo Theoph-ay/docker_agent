@@ -16,6 +16,8 @@ services:
       - .env.sample
     volumes:
       - ./backend/src:/app
+    depends_on:
+      - db_service
     develop:
       watch:
         - action: rebuild
@@ -26,16 +28,31 @@ services:
           path: backend/src
           #target: /app
 
-  static_html:
-    #custom key name
-    #image: python:3.13.4-slim-bullseye
-    build:
-      context: ./static_html #build context
-      dockerfile: static.Dockerfile #if in a seperate dolder you can reference the path e.g dockerfile: ./dockerfile/examples
+  #DATABASE_URL=postgresql+psycopg://username:password@dbhost:dbport/dbname
+  db_service:
+    image: postgres:17.5
     ports:
-      - "8000:8000"
-      - "3000:8000"
-    command: [ "python", "-m", "http.server", "8000" ] # --watch or --reload for this to automatically reload in fastapi or django
+    - 5432:5432
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=db-password
+      - POSTGRES_DB=mydb
     volumes:
-      - ./static_html/src:/app
-  # you can set up a second app here,but make sure you use a different port
+    - dc_managed_db_data:/var/lib/postgresql/data
+
+#   static_html:
+#     #custom key name
+#     #image: python:3.13.4-slim-bullseye
+#     build:
+#       context: ./static_html #build context
+#       dockerfile: static.Dockerfile #if in a seperate dolder you can reference the path e.g dockerfile: ./dockerfile/examples
+#     ports:
+#       - "8000:8000"
+#       - "3000:8000"
+#     command: [ "python", "-m", "http.server", "8000" ] # --watch or --reload for this to automatically reload in fastapi or django
+#     volumes:
+#       - ./static_html/src:/app
+#   # you can set up a second app here,but make sure you use a different port
+
+volumes:
+  dc_managed_db_data:
