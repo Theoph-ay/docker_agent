@@ -7,12 +7,13 @@ from api.ai.services import generate_email
 
 
 @tool
-def research_email(query:str, config: RunnableConfig):
+def research_email(query:str, config: RunnableConfig, to_email:str=None):
     """
-    Perform research based on the query
+    Perform research based on the query, and optionally email the results.
 
     Arguments:
     - query: str - Topic of research
+    - to_email: str - Optional. Email address to send the generated research to. If provided, the email is sent automatically.
     """
     # print(config)
     metadata = config.get('metadata')
@@ -21,6 +22,12 @@ def research_email(query:str, config: RunnableConfig):
     try:
         response = generate_email(query)
         msg = f"Subject {response.subject}:\nBody: {response.contents}"
+        if to_email:
+            try:
+                execute_send_mail(subject=response.subject, contents=response.contents, to_email=to_email)
+                return f"Successfully researched and sent the email to {to_email}! \n\n{msg}"
+            except Exception as e:
+                return f"Researched successfully, but failed to send email: {e} \n\n{msg}"
         return msg 
     except Exception as e:
         print(f"Research email tool error: {e}")
@@ -29,20 +36,27 @@ def research_email(query:str, config: RunnableConfig):
 import traceback
 
 @tool
-def send_mail(subject:str, contents:str) -> str:
+def send_mail(subject:str, contents:str, to_email:str=None) -> str:
     """
-    Send an email to myself with a subject and content.
+    Send an email with a subject and content.
 
     Arguments:
     - subject: str - Text subject of the email
     - contents: str - Text body content of the email
+    - to_email: str - Optional email address to send to. If not provided, it sends it to myself.
     """
+    print(f"Executing send_mail tool... Subject: {subject}, To: {to_email}")
     try:
-        execute_send_mail(subject=subject, contents=contents)
+        if to_email:
+            execute_send_mail(subject=subject, contents=contents, to_email=to_email)
+        else:
+            execute_send_mail(subject=subject, contents=contents)
     except Exception as e:
         print(f"Email error: {e}")
         traceback.print_exc()
         return f"Not sent: {e}"
+    
+    print("Email sent successfully from tool!")
     return "Sent email"
 
 
