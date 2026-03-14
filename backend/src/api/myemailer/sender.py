@@ -21,7 +21,7 @@ def send_mail(subject: str="No Subject provided", contents: str ="No Content pro
     
     # Convert markdown to HTML and add it as an alternative format
     try:
-        html_content = markdown.markdown(contents, extensions=['tables', 'fenced_code'])
+        html_content = markdown.markdown(str(contents), extensions=['tables', 'fenced_code'])
         msg.add_alternative(html_content, subtype='html')
     except Exception as e:
         print(f"Failed to parse Markdown to HTML: {e}")
