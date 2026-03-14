@@ -38,9 +38,14 @@ def get_research_agent():
 
     return agent
 
+from langgraph.checkpoint.memory import MemorySaver
+
+# Global memory saver to retain conversation state across requests
+memory_saver = MemorySaver()
+
 # supe = get_supervisor()
 # supe.invoke({"messages": [{"role": "user", "content": "Find out how to create a latte then email me the results."}]})
-def get_supervisor(checkpointer=None):
+def get_supervisor(checkpointer=memory_saver):
     llm = get_llm()
     email_agent = get_email_agent()
     research_agent = get_research_agent()
@@ -49,8 +54,11 @@ def get_supervisor(checkpointer=None):
         agents=[email_agent, research_agent],
         model = llm,
          prompt=(
-            "You manage a research assistant and a"
-            "email inbox manager assistant. Assign work to them."
+            "You manage a research assistant and an "
+            "email inbox manager assistant. Assign work to them. "
+            "CRITICAL: If the user asks you to send an email, you MUST "
+            "instruct the email_agent to invoke the send_mail tool. Do not just "
+            "give the user a draft to copy/paste if they explicitly asked you to send it."
         ),
        
     ).compile( checkpointer=checkpointer)
