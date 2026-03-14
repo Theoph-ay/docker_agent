@@ -38,14 +38,9 @@ def get_research_agent():
 
     return agent
 
-from langgraph.checkpoint.memory import MemorySaver
+# Removed MemorySaver to manually manage token limits via API instead.
 
-# Global memory saver to retain conversation state across requests
-memory_saver = MemorySaver()
-
-# supe = get_supervisor()
-# supe.invoke({"messages": [{"role": "user", "content": "Find out how to create a latte then email me the results."}]})
-def get_supervisor(checkpointer=memory_saver):
+def get_supervisor():
     llm = get_llm()
     email_agent = get_email_agent()
     research_agent = get_research_agent()
@@ -61,5 +56,5 @@ def get_supervisor(checkpointer=memory_saver):
             "give the user a draft to copy/paste if they explicitly asked you to send it."
         ),
        
-    ).compile( checkpointer=checkpointer)
+    ).compile()
     return supe
