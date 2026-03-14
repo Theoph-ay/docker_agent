@@ -34,19 +34,23 @@ It was initially inspired by the [CodingForEntrepreneurs Tutorial: Building an a
 
 ### Installation & Setup
 
-1. **Clone the repository** (if you haven't already).
+1. **Clone the repository** (if you haven't already):
+   ```bash
+   git clone https://github.com/Theoph-ay/docker_agent.git
+   cd docker_agent
+   ```
    
 2. **Environment Variables:**
-   Copy the `.env.sample` to a new `.env` file and fill in your necessary keys:
+   Copy the `.env.sampl-db` to a new `.env` file and fill in your necessary keys:
    ```bash
-   cp .env.sample backend/.env
+   cp .env.sampl-db backend/.env
    # Make sure to provide your GROQ_API_KEY and PostgreSQL credentials.
    ```
 
 3. **Run with Docker Compose:**
    Start the application and the database using Docker Compose from the root directory:
    ```bash
-   docker compose up --build
+   docker compose up --watch --build
    ```
 
 4. **Access the Application:**
