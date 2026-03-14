@@ -20,9 +20,10 @@ def chat_health():
 #/api/chats/recent
 @router.get("/recent", response_model=List[ChatMessageListItem])
 def chat_list_messages(session: Session = Depends(get_session)):
-    query = select(ChatMessage)
-    results = session.exec(query).fetchall()[:10]
-    return results
+    query = select(ChatMessage).order_by(ChatMessage.created_at.asc())
+    results = session.exec(query).fetchall()
+    # If we want the last 50 messages:
+    return results[-50:] if len(results) > 50 else results
 
 
 #HTTP POST
@@ -60,4 +61,10 @@ def chat_create_message(
             break
     if not ai_response:
         raise HTTPException(status_code=400, detail="No response from AI")
+    
+    # Save the AI response to the database
+    ai_msg_obj = ChatMessage(message=ai_response, is_ai=True)
+    session.add(ai_msg_obj)
+    session.commit()
+    
     return {"response": ai_response}

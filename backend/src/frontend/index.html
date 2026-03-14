@@ -210,15 +210,42 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
+        .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            padding: 0 4px;
+            gap: 16px;
+        }
+
+        .message.user .message-footer {
+            flex-direction: row-reverse;
+        }
+
         .message-time {
             font-size: 11px;
             color: #666680;
-            margin-top: 6px;
-            padding: 0 4px;
         }
 
-        .message.user .message-time {
-            text-align: right;
+        .message-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #666680;
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-family: inherit;
+        }
+
+        .action-btn:hover {
+            color: #a0a0b0;
+            text-decoration: underline;
         }
 
         /* ===== THINKING INDICATOR ===== */
@@ -502,9 +529,15 @@
 
             msgDiv.innerHTML = `
                 <div class="message-avatar">${avatarEmoji}</div>
-                <div>
-                    <div class="message-bubble">${bubbleContent}</div>
-                    <div class="message-time">${timeStr}</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div class="message-bubble" data-raw-text="${escapeHtml(text)}">${bubbleContent}</div>
+                    <div class="message-footer">
+                        <div class="message-time">${timeStr}</div>
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="copyMessage(this)">Copy</button>
+                            <button class="action-btn" onclick="editMessage(this)">Edit</button>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -557,7 +590,7 @@
                 }
 
                 messages.forEach(function(msg) {
-                    addMessage(msg.message, 'user');
+                    addMessage(msg.message, msg.is_ai ? 'ai' : 'user');
                 });
             } catch (err) {
                 // Silently ignore — recent messages are optional
@@ -595,6 +628,139 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ============================
+        // Utility: Copy and Edit message
+        // ============================
+        function getRawText(btn) {
+            const messageDiv = btn.closest('.message').querySelector('.message-bubble');
+            // Unescape HTML by parsing it or read from data attribute
+            const rawHtml = messageDiv.getAttribute('data-raw-text');
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = rawHtml;
+            return textarea.value;
+        }
+        
+        async function copyMessage(btn) {
+            const text = getRawText(btn);
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = originalText, 2000);
+            } catch (err) {
+                showError('Failed to copy to clipboard.');
+            }
+        }
+
+        function editMessage(btn) {
+            const messageDiv = btn.closest('.message');
+            const bubble = messageDiv.querySelector('.message-bubble');
+            const actions = messageDiv.querySelector('.message-actions');
+            const rawText = getRawText(btn);
+
+            // Hide actions temporarily
+            actions.style.display = 'none';
+
+            // Create edit wrapper
+            const editWrapper = document.createElement('div');
+            editWrapper.className = 'edit-wrapper';
+            editWrapper.style.width = '100%';
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = rawText;
+            textarea.className = 'edit-textarea';
+            textarea.style.width = '100%';
+            textarea.style.minHeight = '80px';
+            textarea.style.padding = '10px';
+            textarea.style.borderRadius = '8px';
+            textarea.style.background = 'rgba(255, 255, 255, 0.05)';
+            textarea.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            textarea.style.color = '#fff';
+            textarea.style.fontFamily = 'inherit';
+            textarea.style.marginBottom = '8px';
+            textarea.style.resize = 'vertical';
+
+            const btnContainer = document.createElement('div');
+            btnContainer.style.display = 'flex';
+            btnContainer.style.gap = '8px';
+            btnContainer.style.justifyContent = 'flex-end';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save & Submit';
+            saveBtn.className = 'action-btn';
+            saveBtn.style.background = '#3b82f6';
+            saveBtn.style.color = '#fff';
+            saveBtn.style.padding = '6px 12px';
+            saveBtn.style.borderRadius = '4px';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.className = 'action-btn';
+            cancelBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+            cancelBtn.style.color = '#fff';
+            cancelBtn.style.padding = '6px 12px';
+            cancelBtn.style.borderRadius = '4px';
+
+            btnContainer.appendChild(cancelBtn);
+            btnContainer.appendChild(saveBtn);
+
+            editWrapper.appendChild(textarea);
+            editWrapper.appendChild(btnContainer);
+
+            // Save original content to restore on cancel
+            const originalContent = bubble.innerHTML;
+            bubble.innerHTML = '';
+            bubble.appendChild(editWrapper);
+
+            cancelBtn.onclick = () => {
+                bubble.innerHTML = originalContent;
+                actions.style.display = 'flex';
+            };
+
+            saveBtn.onclick = async () => {
+                const newText = textarea.value.trim();
+                if (!newText) {
+                    // Empty text, just cancel
+                    bubble.innerHTML = originalContent;
+                    actions.style.display = 'flex';
+                    return;
+                }
+                
+                // Restore bubble to show the new text
+                const isAi = messageDiv.classList.contains('ai');
+                bubble.innerHTML = isAi ? marked.parse(newText) : escapeHtml(newText);
+                bubble.setAttribute('data-raw-text', escapeHtml(newText));
+                actions.style.display = 'flex';
+
+                // Send the new text to the backend
+                setLoading(true);
+
+                try {
+                    const response = await fetch(API_BASE + '/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: newText })
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => null);
+                        const errMsg = errData?.detail || `Server error (${response.status})`;
+                        throw new Error(errMsg);
+                    }
+
+                    const data = await response.json();
+                    const aiText = extractAIResponse(data);
+                    addMessage(aiText, 'ai');
+                } catch (err) {
+                    showError(err.message || 'Something went wrong.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            textarea.focus();
         }
 
         // ============================

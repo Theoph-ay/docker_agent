@@ -15,6 +15,7 @@ class ChatMessage(SQLModel, table=True):
     #saving, updating, getting, deleting
     id: int | None = Field(default=None, primary_key=True)
     message: str
+    is_ai: bool = Field(default=False)
     created_at: datetime = Field(
         default_factory=get_utc_now,
         sa_type=DateTime(timezone=True),
@@ -24,4 +25,5 @@ class ChatMessage(SQLModel, table=True):
 
 class ChatMessageListItem(SQLModel):
     message: str
+    is_ai: bool = Field(default=False)
     created_at: datetime = Field(default=None)
