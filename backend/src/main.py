@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from api.db import init_db
 from api.chat import models
@@ -17,11 +19,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(chat_router, prefix="/api/chats")
 
-MY_PROJECT = os.environ.get("MY_PROJECT") or "This is my project"
 API_KEY = os.environ.get("API_KEY")
 if not API_KEY:
     raise NotImplementedError("'API_KEY' was not set" )
 
-@app.get("/")
-def read_index():
-    return {"Hello": "World", "project_name": MY_PROJECT}
+# Serve the chat frontend at the root URL
+FRONTEND_DIR = Path(__file__).parent / "frontend"
+
+@app.get("/", response_class=HTMLResponse)
+def chat_page():
+    html_file = FRONTEND_DIR / "index.html"
+    return HTMLResponse(content=html_file.read_text(), status_code=200)
