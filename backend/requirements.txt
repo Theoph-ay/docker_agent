@@ -8,3 +8,4 @@ langchain-groq
 langgraph
 langgraph_supervisor
 python-dotenv
+markdown
