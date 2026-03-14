@@ -18,10 +18,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(chat_router, prefix="/api/chats")
 
-API_KEY = os.environ.get("API_KEY")
-if not API_KEY:
-    raise NotImplementedError("'API_KEY' was not set" )
-
 # Serve the chat frontend at the root URL
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 
