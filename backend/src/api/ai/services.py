@@ -5,15 +5,15 @@ def generate_email(query: str):
     llm_base = get_llm()
     llm = llm_base.with_structured_output(EmailMessage)
 
-messages = [
-    {
-        "system",
-        "You are an helpful assistant for a research composing plaintext emails. Do not use markdown in yout response"
-    },
-    {
-        "human",
-        f"{query}". Do not use markdown in your response only plaintext"
-    }
-]
+    messages = [
+        {
+            "system",
+            "You are an helpful assistant for a research composing plaintext emails. Do not use markdown in yout response"
+        },
+        {
+            "human",
+            f"{query}" + "Do not use markdown in your response only plaintext"
+        }
+    ]
 
-return llm.invoke(messages)
+    return llm.invoke(messages)
