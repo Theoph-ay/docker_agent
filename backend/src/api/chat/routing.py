@@ -27,7 +27,7 @@ def chat_list_messages(session: Session = Depends(get_session)):
 
 #HTTP POST
 # curl -X POST -d '{"message": "Hello world"}' -H "Content-Type: application/json" "http://localhost:8000/api/chats"
-@router.post("/", response_model=EmailMessage)
+@router.post("/")
 def chat_create_message(
     payload:ChatMessagePayload,
     session: Session = Depends(get_session)
@@ -39,7 +39,7 @@ def chat_create_message(
     session.commit()
     session.refresh(obj)
     supe = get_supervisor()
-    msg_date = {
+    msg_data = {
         "messages": [
             {
                 "role": "user", 
@@ -47,10 +47,17 @@ def chat_create_message(
             }
         ]
     }
-    result = supe.invoke(msg_date)
-    return result
-    if not result:
-        raise HTTPException(status_code=400, detail="No result from supervisor")
-    if not messages:
-        raise HTTPException(status_code=400, detail="No messages in result")
-    return messages[-1]
+    
+    config = {"configurable": {"thread_id": "main"}}
+    result = supe.invoke(msg_data, config)
+    # Extract the last AI/assistant message from the supervisor result
+    messages = result.get("messages", [])
+    ai_response = ""
+    for msg in reversed(messages):
+        role = getattr(msg, "type", None) or getattr(msg, "role", None)
+        if role in ("ai", "assistant"):
+            ai_response = msg.content
+            break
+    if not ai_response:
+        raise HTTPException(status_code=400, detail="No response from AI")
+    return {"response": ai_response}

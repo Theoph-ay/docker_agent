@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 
-from api.myemailer.sender import send_mail
+from api.myemailer.sender import send_mail as execute_send_mail
 from api.myemailer.inbox_reader import read_inbox
 from api.ai.services import generate_email
 
@@ -18,24 +18,31 @@ def research_email(query:str, config: RunnableConfig):
     metadata = config.get('metadata')
     add_field = metadata.get("additional_field")
     print('add_field', add_field)
-    response = generate_email(query)
-    msg = f"Subject {response.subject}:\nBody: {response.content}"
-    return msg 
+    try:
+        response = generate_email(query)
+        msg = f"Subject {response.subject}:\nBody: {response.contents}"
+        return msg 
+    except Exception as e:
+        print(f"Research email tool error: {e}")
+        return f"Failed to generate structured email content due to error: {e}. Please try again or provide the research directly."
 
+import traceback
 
 @tool
-def send_mail(subject:str, content:str) -> str:
+def send_mail(subject:str, contents:str) -> str:
     """
     Send an email to myself with a subject and content.
 
     Arguments:
     - subject: str - Text subject of the email
-    - content: str - Text body content of the email
+    - contents: str - Text body content of the email
     """
     try:
-        send_mail(subject=subject, content=content)
-    except:
-        return "Not sent"
+        execute_send_mail(subject=subject, contents=contents)
+    except Exception as e:
+        print(f"Email error: {e}")
+        traceback.print_exc()
+        return f"Not sent: {e}"
     return "Sent email"
 
 
