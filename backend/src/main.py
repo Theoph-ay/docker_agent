@@ -3,8 +3,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-
+from fastapi.responses import HTMLResponse, FileResponse
 from api.db import init_db
 from api.chat import models
 from api.chat.routing import router as chat_router
@@ -30,3 +29,10 @@ FRONTEND_DIR = Path(__file__).parent / "frontend"
 def chat_page():
     html_file = FRONTEND_DIR / "index.html"
     return HTMLResponse(content=html_file.read_text(), status_code=200)
+
+@app.get("/ai-mail-icon.png")
+def get_favicon():
+    icon_path = FRONTEND_DIR / "ai-mail-icon.png"
+    if icon_path.exists():
+        return FileResponse(icon_path)
+    return HTMLResponse(status_code=404)
