@@ -8,3 +8,6 @@ class EmailMessage(BaseModel):
     subject: str
     contents: str
     invalid_request: bool = Field(default=False)
+
+class SupervisorMessage(BaseModel):
+    content: str

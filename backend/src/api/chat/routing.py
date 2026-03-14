@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from .models import ChatMessagePayload, ChatMessage, ChatMessageListItem
 from api.db import get_session
 
-from api.ai.schemas import EmailMessage
+from api.ai.agents import get_supervisor
+from api.ai.schemas import EmailMessage, SupervisorMessage
 
 from api.ai.services import generate_email
 
@@ -37,6 +38,19 @@ def chat_create_message(
     session.add(obj)
     session.commit()
     session.refresh(obj)
-    #Store in database
-    response = generate_email(payload.message)
-    return response
+    supe = get_supervisor()
+    msg_date = {
+        "messages": [
+            {
+                "role": "user", 
+                "content": payload.message
+            }
+        ]
+    }
+    result = supe.invoke(msg_date)
+    return result
+    if not result:
+        raise HTTPException(status_code=400, detail="No result from supervisor")
+    if not messages:
+        raise HTTPException(status_code=400, detail="No messages in result")
+    return messages[-1]
