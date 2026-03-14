@@ -8,11 +8,14 @@ def generate_email(query: str):
     messages = [
         (
             "system",
-            "You are an helpful assistant for a research composing plaintext emails. Do not use markdown in yout response"
+            "You are a helpful assistant for researching and composing plain text emails. "
+            "You MUST use the provided tool/schema to return the drafted email in the exact JSON format required. "
+            "Do not return conversational text; return only the structured output."
         ),
         (
             "human",
-            f"{query}" + "Do not use markdown in your response only plaintext"
+            f"Draft an email about: {query}\n\n"
+            "Remember: return ONLY the JSON representation of the email using the provided EmailMessage tool. Do not use markdown."
         )
     ]
 

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Agent</title>
+    <!-- Simple robot emoji favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -330,6 +332,11 @@
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
+            resize: none;
+            min-height: 48px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
         }
 
         #message-input::placeholder {
@@ -369,6 +376,16 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 12px 24px;
+            font-size: 11px;
+            color: #666680;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* ===== ERROR TOAST ===== */
@@ -432,14 +449,19 @@
     <!-- INPUT AREA -->
     <div class="input-container">
         <div class="input-wrapper">
-            <input
-                type="text"
+            <textarea
                 id="message-input"
-                placeholder="Type your message..."
+                placeholder="Type your message... (Shift+Enter for new line)"
                 autocomplete="off"
-            />
+                rows="1"
+            ></textarea>
             <button id="send-btn">Send</button>
         </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        Built with LangChain, LangGraph, Python, Docker, HTML and CSS.
     </div>
 
     <script>
@@ -468,7 +490,10 @@
 
             // Show user's message bubble
             addMessage(text, 'user');
+            
+            // Reset textarea
             messageInput.value = '';
+            messageInput.style.height = 'auto';
 
             // Disable input while waiting for response
             setLoading(true);
@@ -767,10 +792,16 @@
         // Event listeners
         // ============================
 
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
         // Click send button
         sendBtn.addEventListener('click', sendMessage);
 
-        // Press Enter to send
+        // Press Enter to send (Shift+Enter for newline)
         messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
