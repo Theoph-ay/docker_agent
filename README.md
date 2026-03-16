@@ -19,7 +19,7 @@ It was initially inspired by the [CodingForEntrepreneurs Tutorial: Building an a
 ## 🛠️ Tech Stack
 
 - **Backend:** Python 3.13, FastAPI, Uvicorn
-- **AI & LLMs:** LangChain, LangGraph (Supervisor, prebuilt react agents), LangChain-Groq
+- **AI & LLMs:** LangChain, LangGraph (Supervisor, prebuilt react_agents), LangChain-Groq
 - **Database:** PostgreSQL, SQLModel, Psycopg
 - **Frontend:** Vanilla HTML, CSS, JavaScript (Fetch API)
 - **Deployment:** Docker, Docker Compose
